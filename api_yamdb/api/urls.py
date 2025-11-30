@@ -16,4 +16,15 @@ router.register(
 
 urlpatterns = [
     path('v1/', include(router.urls)),
+
+from .views import CategoryViewSet, GenreViewSet, TitleViewSet
+
+
+router_v1 = DefaultRouter()
+router_v1.register('categories', CategoryViewSet, basename='categories')
+router_v1.register('genres', GenreViewSet, basename='genres')
+router_v1.register('titles', TitleViewSet, basename='titles')
+
+urlpatterns = [
+    path('', include(router_v1.urls)),
 ]
