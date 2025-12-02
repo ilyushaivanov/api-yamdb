@@ -1,3 +1,5 @@
+import re
+
 from rest_framework import serializers
 from django.core.exceptions import ValidationError
 from django.shortcuts import get_object_or_404
@@ -32,15 +34,54 @@ class GetTokenSerializer(serializers.ModelSerializer):
         model = User
         fields = (
             'username',
-            'confirmation_code'
+            'confirmation_code')
+
+
+class SignUpSerializer(serializers.Serializer):
+    email = serializers.EmailField(max_length=254, required=True)
+    username = serializers.CharField(max_length=150, required=True)
+
+    def validate_email(self, value):
+        if len(value) > 254:
+            raise serializers.ValidationError(
+                'email не должен быть длиннее 254 символов.')
+        return value
+
+    def validate_username(self, value):
+        if not re.match(r'^[\w.@+-]+\Z', value):
+            raise serializers.ValidationError(
+                'username должен соответствовать паттерну ^[\\w.@+-]+\\Z.'
+            )
+        if value == 'me':
+            raise serializers.ValidationError(
+                'Использование имени "me" запрещено.')
+        return value
+
+    def validate(self, data):
+        email = data['email']
+        username = data['username']
+        user_by_email = User.objects.filter(email=email).first()
+        user_by_username = User.objects.filter(username=username).first()
+
+        if user_by_email and user_by_email.username != username:
+            raise serializers.ValidationError({
+                'email': 'Email уже зарегистрирован с другим username.'
+            })
+
+        if user_by_username and user_by_username.email != email:
+            raise serializers.ValidationError({
+                'username': 'Пользователь с таким username уже существует.'
+            })
+
+        if not user_by_email and not user_by_username:
+            return data
+
+        if user_by_email and user_by_email.username == username:
+            return data
+
+        raise serializers.ValidationError(
+            'Некорректная комбинация email и username.'
         )
-
-
-class SignUpSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = User
-        fields = ('email', 'username')
 
 
 class CategorySerializer(serializers.ModelSerializer):
