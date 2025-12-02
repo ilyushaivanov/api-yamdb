@@ -1,4 +1,5 @@
 from api.filters import TitleFilter
+from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import EmailMessage
 from django.db.models import Avg
 from django.shortcuts import get_object_or_404
@@ -97,11 +98,8 @@ class APISignup(APIView):
         )
         email.send()
 
-    def generate_confirmation_code(self):
-        import random
-        import string
-        return ''.join(random.choices(string.ascii_uppercase + string.digits,
-                                      k=6))
+    def generate_confirmation_code(self, user):
+        return default_token_generator.make_token(user)
 
     def post(self, request):
         serializer = SignUpSerializer(data=request.data)
@@ -113,15 +111,9 @@ class APISignup(APIView):
         email = serializer.validated_data['email']
         username = serializer.validated_data['username']
 
-        if username == 'me':
-            return Response(
-                {'username': 'Использование имени "me" запрещено.'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
         try:
             user = User.objects.get(email=email, username=username)
-            user.confirmation_code = self.generate_confirmation_code()
+            user.confirmation_code = self.generate_confirmation_code(user)
             user.save()
         except User.DoesNotExist:
             user = User.objects.create_user(
@@ -129,7 +121,7 @@ class APISignup(APIView):
                 email=email,
                 password=None
             )
-            user.confirmation_code = self.generate_confirmation_code()
+            user.confirmation_code = self.generate_confirmation_code(user)
             user.save()
 
         email_body = (
