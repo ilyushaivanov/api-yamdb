@@ -1,20 +1,22 @@
-import re
-
 from django.core.exceptions import ValidationError
+from django.core.validators import RegexValidator
 from django.utils import timezone
+
+regex_validator = RegexValidator(
+    regex=r'^[\w.@+-]+\Z',
+    message='Username может содержать только буквы, цифры и символы @/./+/-/_'
+)
 
 
 def validate_username(value):
-    if value == 'me':
-        raise ValidationError(
-            ('Имя пользователя не может быть <me>.'),
-            params={'value': value},
-        )
-    if re.search(r'^[a-zA-Z][a-zA-Z0-9-_\.]{1,20}$', value) is None:
-        raise ValidationError(
-            (f'Не допустимые символы <{value}> в нике.'),
-            params={'value': value},
-        )
+    """
+    Валидатор проверят имя пользователя:
+        Не являет ли имя пользователя - me
+        и проверяет на неподходящие символы
+    """
+    if value.lower() == 'me':
+        raise ValidationError("Неподходящее имя пользователя")
+    regex_validator(value)
 
 
 def validate_year(value):

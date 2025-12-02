@@ -1,10 +1,8 @@
-import re
-
-from rest_framework import serializers
 from django.core.exceptions import ValidationError
 from django.shortcuts import get_object_or_404
-
+from rest_framework import serializers
 from reviews.models import Category, Comment, Genre, Review, Title, User
+from reviews.validators import validate_username
 
 
 class UsersSerializer(serializers.ModelSerializer):
@@ -34,27 +32,22 @@ class GetTokenSerializer(serializers.ModelSerializer):
         model = User
         fields = (
             'username',
-            'confirmation_code')
+            'confirmation_code'
+        )
 
 
 class SignUpSerializer(serializers.Serializer):
     email = serializers.EmailField(max_length=254, required=True)
-    username = serializers.CharField(max_length=150, required=True)
+    username = serializers.CharField(
+        max_length=150,
+        required=True,
+        validators=[validate_username]
+    )
 
     def validate_email(self, value):
         if len(value) > 254:
             raise serializers.ValidationError(
                 'email не должен быть длиннее 254 символов.')
-        return value
-
-    def validate_username(self, value):
-        if not re.match(r'^[\w.@+-]+\Z', value):
-            raise serializers.ValidationError(
-                'username должен соответствовать паттерну ^[\\w.@+-]+\\Z.'
-            )
-        if value == 'me':
-            raise serializers.ValidationError(
-                'Использование имени "me" запрещено.')
         return value
 
     def validate(self, data):
