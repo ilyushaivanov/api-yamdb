@@ -31,6 +31,8 @@ class UsersViewSet(viewsets.ModelViewSet):
     filter_backends = (SearchFilter, )
     search_fields = ('username', )
 
+    http_method_names = ['get', 'post', 'patch', 'delete', 'head', 'options']
+
     @action(
         methods=['GET', 'PATCH'],
         detail=False,
@@ -84,15 +86,6 @@ class APIGetToken(APIView):
 
 
 class APISignup(APIView):
-    """
-    Получить код подтверждения на переданный email. Права доступа: Доступно без
-    токена. Использовать имя 'me' в качестве username запрещено. Поля email и
-    username должны быть уникальными. Пример тела запроса:
-    {
-        "email": "string",
-        "username": "string"
-    }
-    """
     permission_classes = (permissions.AllowAny,)
 
     @staticmethod
@@ -104,13 +97,44 @@ class APISignup(APIView):
         )
         email.send()
 
+    def generate_confirmation_code(self):
+        import random
+        import string
+        return ''.join(random.choices(string.ascii_uppercase + string.digits,
+                                      k=6))
+
     def post(self, request):
         serializer = SignUpSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        user = serializer.save()
+
+        if not serializer.is_valid():
+            return Response(serializer.errors,
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        email = serializer.validated_data['email']
+        username = serializer.validated_data['username']
+
+        if username == 'me':
+            return Response(
+                {'username': 'Использование имени "me" запрещено.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            user = User.objects.get(email=email, username=username)
+            user.confirmation_code = self.generate_confirmation_code()
+            user.save()
+        except User.DoesNotExist:
+            user = User.objects.create_user(
+                username=username,
+                email=email,
+                password=None
+            )
+            user.confirmation_code = self.generate_confirmation_code()
+            user.save()
+
         email_body = (
-            f'Доброе время суток, {user.username}.'
-            f'\nКод подтверждения для доступа к API: {user.confirmation_code}'
+            f'Доброе время суток, {user.username}.\n'
+            f'Код подтверждения для доступа к API: {user.confirmation_code}'
         )
         data = {
             'email_body': email_body,
@@ -118,7 +142,11 @@ class APISignup(APIView):
             'email_subject': 'Код подтверждения для доступа к API!'
         }
         self.send_email(data)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+
+        return Response(
+            {'email': user.email, 'username': user.username},
+            status=status.HTTP_200_OK
+        )
 
 
 class CategoryViewSet(ModelMixinSet):
@@ -146,9 +174,6 @@ class GenreViewSet(ModelMixinSet):
 
 
 class TitleViewSet(ModelViewSet):
-    """
-    Получить список всех объектов. Права доступа: Доступно без токена
-    """
     queryset = Title.objects.annotate(
         rating=Avg('reviews__score')
     ).all()
@@ -160,6 +185,21 @@ class TitleViewSet(ModelViewSet):
         if self.action in ('list', 'retrieve'):
             return TitleReadSerializer
         return TitleWriteSerializer
+
+    def update(self, request, *args, **kwargs):
+        return Response(
+            {"detail": "Метод PUT не поддерживается для произведений. "},
+            status=status.HTTP_405_METHOD_NOT_ALLOWED
+        )
+
+    def partial_update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(
+            instance, data=request.data, partial=True
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class CommentViewSet(viewsets.ModelViewSet):
@@ -178,6 +218,21 @@ class CommentViewSet(viewsets.ModelViewSet):
             id=self.kwargs.get('review_id'))
         serializer.save(author=self.request.user, review=review)
 
+    def update(self, request, *args, **kwargs):
+        return Response(
+            {"detail": "Метод PUT не поддерживается для комментариев."},
+            status=status.HTTP_405_METHOD_NOT_ALLOWED
+        )
+
+    def partial_update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(
+            instance, data=request.data, partial=True
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
 
 class ReviewViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewSerializer
@@ -194,3 +249,17 @@ class ReviewViewSet(viewsets.ModelViewSet):
             Title,
             id=self.kwargs.get('title_id'))
         serializer.save(author=self.request.user, title=title)
+
+    def update(self, request, *args, **kwargs):
+        return Response(
+            {"detail": "Метод PUT не поддерживается для отзывов. "},
+            status=status.HTTP_405_METHOD_NOT_ALLOWED
+        )
+
+    def partial_update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(
+            instance, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
