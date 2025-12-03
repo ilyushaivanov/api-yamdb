@@ -1,7 +1,8 @@
 import os
 from datetime import timedelta
+from pathlib import Path
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = 'p&l%385148kslhtyn^##a1)ilz@4zqj=rq&agdol^##zgl9(vs'
 
@@ -110,16 +111,9 @@ SIMPLE_JWT = {
     'AUTH_HEADER_TYPES': ('Bearer',),
 }
 
-EMAIL_HOST = 'smtp.gmail.com'
 
-EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
+EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
+EMAIL_FILE_PATH = BASE_DIR / 'sent_emails'
 
-EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
-
-EMAIL_PORT = 587
-
-EMAIL_USE_TLS = True
-
-EMAIL_USE_SSL = False
 
 AUTH_USER_MODEL = 'reviews.User'
