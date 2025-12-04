@@ -1,0 +1,12 @@
+max_length_username = 150
+max_length_email = 254
+max_length_role = 20
+max_length_first_name = 150
+max_length_last_name = 150
+max_length_confirmation_code = 255
+max_length_name_Category = 200
+max_length_name_Genre = 200
+max_length_name_Title = 200
+max_length_description_Title = 255
+max_length_text_Review = 200
+max_length_text_Comment = 200
