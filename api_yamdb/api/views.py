@@ -14,8 +14,8 @@ from rest_framework.viewsets import ModelViewSet
 from rest_framework_simplejwt.tokens import RefreshToken
 from reviews.models import Category, Genre, Review, Title, User
 
-from .mixins import ModelMixinSet
-from .permissions import (AdminModeratorAuthorPermission, AdminOnly,
+from .mixins import CreateListDestroyViewSet
+from .permissions import (IsAdminModeratorAuthorPermission, IsAdminOnly,
                           IsAdminUserOrReadOnly)
 from .serializers import (CategorySerializer, CommentSerializer,
                           GenreSerializer, GetTokenSerializer,
@@ -27,7 +27,7 @@ from .serializers import (CategorySerializer, CommentSerializer,
 class UsersViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UsersSerializer
-    permission_classes = (IsAuthenticated, AdminOnly,)
+    permission_classes = (IsAuthenticated, IsAdminOnly,)
     lookup_field = 'username'
     filter_backends = (SearchFilter, )
     search_fields = ('username', )
@@ -141,7 +141,7 @@ class APISignup(APIView):
         )
 
 
-class CategoryViewSet(ModelMixinSet):
+class CategoryViewSet(CreateListDestroyViewSet):
     """
     Получить список всех категорий. Права доступа: Доступно без токена
     """
@@ -153,7 +153,7 @@ class CategoryViewSet(ModelMixinSet):
     lookup_field = 'slug'
 
 
-class GenreViewSet(ModelMixinSet):
+class GenreViewSet(CreateListDestroyViewSet):
     """
     Получить список всех жанров. Права доступа: Доступно без токена
     """
@@ -196,7 +196,7 @@ class TitleViewSet(ModelViewSet):
 
 class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
-    permission_classes = (AdminModeratorAuthorPermission,)
+    permission_classes = (IsAdminModeratorAuthorPermission,)
 
     def get_queryset(self):
         review = get_object_or_404(
@@ -228,7 +228,7 @@ class CommentViewSet(viewsets.ModelViewSet):
 
 class ReviewViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewSerializer
-    permission_classes = (AdminModeratorAuthorPermission,)
+    permission_classes = (IsAdminModeratorAuthorPermission,)
 
     def get_queryset(self):
         title = get_object_or_404(

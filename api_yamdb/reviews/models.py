@@ -1,14 +1,11 @@
 from django.contrib.auth.models import AbstractUser
-from django.contrib.auth.tokens import default_token_generator
 from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
-from django.db.models.signals import post_save
-from django.dispatch import receiver
 
 from .validators import validate_username, validate_year
 from .constants import (
-    max_length_username, max_length_email,
+    max_length_username,
     max_length_role, max_length_first_name,
     max_length_last_name, max_length_confirmation_code,
     max_length_name_Category, max_length_name_Genre,
@@ -207,7 +204,8 @@ class Review(models.Model):
         ordering = ('pub_date',)
 
     def __str__(self):
-        return f'Отзыв {self.id} от {self.author.username} на {self.title.name}'
+        return f'Отзыв {self.id} от {self.author.username} на {
+            self.title.name}'
 
 
 class Comment(models.Model):
