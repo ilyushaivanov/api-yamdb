@@ -1,11 +1,7 @@
 from django.core.exceptions import ValidationError
-from django.core.validators import RegexValidator
 from django.utils import timezone
 
-regex_validator = RegexValidator(
-    regex=r'^[\w.@+-]+\Z',
-    message='Username может содержать только буквы, цифры и символы @/./+/-/_'
-)
+FORBIDDEN_USERNAME = ('me',)
 
 
 def validate_username(value):
@@ -14,9 +10,8 @@ def validate_username(value):
         Не являет ли имя пользователя - me
         и проверяет на неподходящие символы
     """
-    if value.lower() == 'me':
+    if value.lower() in FORBIDDEN_USERNAME:
         raise ValidationError("Неподходящее имя пользователя")
-    regex_validator(value)
 
 
 def validate_year(value):
