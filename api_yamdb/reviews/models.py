@@ -54,12 +54,6 @@ class User(AbstractUser):
         max_length=max_length_last_name,
         blank=True
     )
-    confirmation_code = models.CharField(
-        'код подтверждения',
-        max_length=max_length_confirmation_code,
-        null=True,
-        default='XXXX'
-    )
 
     @property
     def is_user(self):
@@ -143,7 +137,6 @@ class Title(models.Model):
     description = models.TextField(
         'описание',
         max_length=max_length_description_Title,
-        null=True,
         blank=True
     )
     genre = models.ManyToManyField(

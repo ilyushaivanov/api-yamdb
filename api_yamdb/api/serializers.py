@@ -4,9 +4,7 @@ from django.contrib.auth.validators import UnicodeUsernameValidator
 from rest_framework import serializers
 from reviews.models import Category, Comment, Genre, Review, Title, User
 from reviews.validators import validate_username
-
-USERNAME_MAX_LENGTH = 150
-EMAIL_MAX_LENGTH = 254
+from reviews.constants import max_length_username, max_length_email
 
 
 class UsersSerializer(serializers.ModelSerializer):
@@ -28,7 +26,7 @@ class NotAdminSerializer(serializers.ModelSerializer):
 
 class GetTokenSerializer(serializers.Serializer):
     username = serializers.CharField(
-        max_length=USERNAME_MAX_LENGTH,
+        max_length=max_length_username,
         required=True,
         validators=[
             validate_username,
@@ -48,9 +46,9 @@ class GetTokenSerializer(serializers.Serializer):
 
 
 class SignUpSerializer(serializers.Serializer):
-    email = serializers.EmailField(max_length=EMAIL_MAX_LENGTH, required=True)
+    email = serializers.EmailField(max_length=max_length_email, required=True)
     username = serializers.CharField(
-        max_length=USERNAME_MAX_LENGTH,
+        max_length=max_length_username,
         required=True,
         validators=[
             validate_username,
