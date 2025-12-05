@@ -7,10 +7,10 @@ from .validators import validate_username, validate_year
 from .constants import (
     max_length_username,
     max_length_role, max_length_first_name,
-    max_length_last_name, max_length_confirmation_code,
-    max_length_name_Category, max_length_name_Genre,
-    max_length_name_Title, max_length_description_Title,
-    max_length_text_Review, max_length_text_Comment,
+    max_length_last_name,
+    max_length_name_category, max_length_name_genre,
+    max_length_name_title, max_length_description_title,
+    max_length_text_review, max_length_text_comment,
 )
 
 
@@ -79,7 +79,7 @@ class User(AbstractUser):
 class Category(models.Model):
     name = models.CharField(
         'имя категории',
-        max_length=max_length_name_Category
+        max_length=max_length_name_category
     )
     slug = models.SlugField(
         'слаг категории',
@@ -99,7 +99,7 @@ class Category(models.Model):
 class Genre(models.Model):
     name = models.CharField(
         'имя жанра',
-        max_length=max_length_name_Genre
+        max_length=max_length_name_genre
     )
     slug = models.SlugField(
         'слаг жанра',
@@ -119,7 +119,7 @@ class Genre(models.Model):
 class Title(models.Model):
     name = models.CharField(
         'название',
-        max_length=max_length_name_Title,
+        max_length=max_length_name_title,
         db_index=True
     )
     year = models.IntegerField(
@@ -136,7 +136,7 @@ class Title(models.Model):
     )
     description = models.TextField(
         'описание',
-        max_length=max_length_description_Title,
+        max_length=max_length_description_title,
         blank=True
     )
     genre = models.ManyToManyField(
@@ -163,7 +163,7 @@ class Review(models.Model):
     )
     text = models.CharField(
         'текст отзыва',
-        max_length=max_length_text_Review
+        max_length=max_length_text_review
     )
     author = models.ForeignKey(
         User,
@@ -210,7 +210,7 @@ class Comment(models.Model):
     )
     text = models.CharField(
         'текст комментария',
-        max_length=max_length_text_Comment
+        max_length=max_length_text_comment
     )
     author = models.ForeignKey(
         User,
