@@ -63,8 +63,8 @@ class APIGetToken(APIView):
     Получение JWT-токена в обмен на username и confirmation code.
     Права доступа: Доступно без токена. Пример тела запроса:
     {
-        "username": "string",
-        "confirmation_code": "string"
+        'username': 'string',
+        'confirmation_code': 'string'
     }
     """
     def post(self, request):
@@ -78,16 +78,16 @@ class APIGetToken(APIView):
             user = User.objects.get(username=username)
         except User.DoesNotExist:
             return Response(
-                {"username": "Пользователь не найден"},
+                {'username': 'Пользователь не найден'},
                 status=status.HTTP_404_NOT_FOUND
             )
 
         if default_token_generator.check_token(user, confirmation_code):
             token = str(RefreshToken.for_user(user).access_token)
-            return Response({"token": token}, status=status.HTTP_200_OK)
+            return Response({'token': token}, status=status.HTTP_200_OK)
 
         return Response(
-            {"confirmation_code": "Неверный код подтверждения!"},
+            {'confirmation_code': 'Неверный код подтверждения!'},
             status=status.HTTP_400_BAD_REQUEST
         )
 
@@ -132,13 +132,7 @@ class APISignup(APIView):
             'email_subject': 'Код подтверждения для доступа к API!'
         })
 
-        return Response(
-            {
-                "email": user.email,
-                "username": user.username
-            },
-            status=status.HTTP_200_OK
-        )
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class CategoryViewSet(CreateListDestroyViewSet):
@@ -172,26 +166,12 @@ class TitleViewSet(ModelViewSet):
     permission_classes = (IsAdminUserOrReadOnly,)
     filter_backends = (DjangoFilterBackend, )
     filterset_class = TitleFilter
+    http_method_names = ['get', 'post', 'patch', 'delete', 'head', 'options']
 
     def get_serializer_class(self):
         if self.action in ('list', 'retrieve'):
             return TitleReadSerializer
         return TitleWriteSerializer
-
-    def update(self, request, *args, **kwargs):
-        return Response(
-            {"detail": "Метод PUT не поддерживается для произведений. "},
-            status=status.HTTP_405_METHOD_NOT_ALLOWED
-        )
-
-    def partial_update(self, request, *args, **kwargs):
-        instance = self.get_object()
-        serializer = self.get_serializer(
-            instance, data=request.data, partial=True
-        )
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class CommentViewSet(viewsets.ModelViewSet):
