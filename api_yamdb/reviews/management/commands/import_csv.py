@@ -40,7 +40,7 @@ class Command(BaseCommand):
                 except Exception:
                     continue
 
-        print(f'✅ {model.__name__}: {count} записей')
+        print(f'{model.__name__}: {count} записей')
 
     def import_relations(self, path):
         filepath = os.path.join(path, 'genre_title.csv')
