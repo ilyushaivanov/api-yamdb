@@ -197,8 +197,10 @@ class Review(models.Model):
         ordering = ('pub_date',)
 
     def __str__(self):
-        return f'Отзыв {self.id} от {self.author.username} на {
-            self.title.name}'
+        return (
+            f'Отзыв {self.id}'
+            f'от {self.author.username} на {self.title.name}'
+        )
 
 
 class Comment(models.Model):
