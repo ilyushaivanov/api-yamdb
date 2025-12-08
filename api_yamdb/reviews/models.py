@@ -5,12 +5,13 @@ from django.db import models
 
 from .validators import validate_username, validate_year
 from .constants import (
-    max_length_username,
-    max_length_role, max_length_first_name,
-    max_length_last_name,
-    max_length_name_category, max_length_name_genre,
-    max_length_name_title, max_length_description_title,
-    max_length_text_review, max_length_text_comment,
+    MAX_LENGTH_USERNAME,
+    MAX_LENGTH_ROLE, MAX_LENGTH_FIRST_NAME,
+    MAX_LENGTH_LAST_NAME,
+    MAX_LENGTH_NAME_CATEGORY, MAX_LENGTH_NAME_GENRE,
+    MAX_LENGTH_NAME_TITLE,
+    MAX_LENGTH_TEXT_REVIEW, MAX_LENGTH_TEXT_COMMENT,
+    MIN_SCORE, MAX_SCORE
 )
 
 
@@ -27,7 +28,7 @@ class User(AbstractUser):
             validate_username,
             UnicodeUsernameValidator(),
         ),
-        max_length=max_length_username,
+        max_length=MAX_LENGTH_USERNAME,
         unique=True,
     )
     email = models.EmailField(
@@ -35,7 +36,7 @@ class User(AbstractUser):
     )
     role = models.CharField(
         'роль',
-        max_length=max_length_role,
+        max_length=MAX_LENGTH_ROLE,
         choices=UserRole.choices,
         default=UserRole.USER,
         blank=True
@@ -46,22 +47,18 @@ class User(AbstractUser):
     )
     first_name = models.CharField(
         'имя',
-        max_length=max_length_first_name,
+        max_length=MAX_LENGTH_FIRST_NAME,
         blank=True
     )
     last_name = models.CharField(
         'фамилия',
-        max_length=max_length_last_name,
+        max_length=MAX_LENGTH_LAST_NAME,
         blank=True
     )
 
     @property
-    def is_user(self):
-        return self.role == UserRole.USER
-
-    @property
     def is_admin(self):
-        return self.role == UserRole.ADMIN
+        return self.role == UserRole.ADMIN or self.is_superuser
 
     @property
     def is_moderator(self):
@@ -79,7 +76,7 @@ class User(AbstractUser):
 class Category(models.Model):
     name = models.CharField(
         'имя категории',
-        max_length=max_length_name_category
+        max_length=MAX_LENGTH_NAME_CATEGORY
     )
     slug = models.SlugField(
         'слаг категории',
@@ -99,7 +96,7 @@ class Category(models.Model):
 class Genre(models.Model):
     name = models.CharField(
         'имя жанра',
-        max_length=max_length_name_genre
+        max_length=MAX_LENGTH_NAME_GENRE
     )
     slug = models.SlugField(
         'слаг жанра',
@@ -119,7 +116,7 @@ class Genre(models.Model):
 class Title(models.Model):
     name = models.CharField(
         'название',
-        max_length=max_length_name_title,
+        max_length=MAX_LENGTH_NAME_TITLE,
         db_index=True
     )
     year = models.IntegerField(
@@ -136,7 +133,6 @@ class Title(models.Model):
     )
     description = models.TextField(
         'описание',
-        max_length=max_length_description_title,
         blank=True
     )
     genre = models.ManyToManyField(
@@ -163,7 +159,7 @@ class Review(models.Model):
     )
     text = models.CharField(
         'текст отзыва',
-        max_length=max_length_text_review
+        max_length=MAX_LENGTH_TEXT_REVIEW
     )
     author = models.ForeignKey(
         User,
@@ -173,11 +169,16 @@ class Review(models.Model):
     )
     score = models.IntegerField(
         'оценка',
-        validators=(
-            MinValueValidator(1),
-            MaxValueValidator(10)
-        ),
-        error_messages={'validators': 'Оценка от 1 до 10!'}
+        validators=[
+            MinValueValidator(
+                MIN_SCORE,
+                message=f'Оценка не может быть меньше {MIN_SCORE}'
+            ),
+            MaxValueValidator(
+                MAX_SCORE,
+                message=f'Оценка не может быть больше {MAX_SCORE}'
+            )
+        ]
     )
     pub_date = models.DateTimeField(
         'дата публикации',
@@ -212,7 +213,7 @@ class Comment(models.Model):
     )
     text = models.CharField(
         'текст комментария',
-        max_length=max_length_text_comment
+        max_length=MAX_LENGTH_TEXT_COMMENT
     )
     author = models.ForeignKey(
         User,

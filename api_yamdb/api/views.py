@@ -1,4 +1,3 @@
-from api.filters import TitleFilter
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import EmailMessage
 from django.db.models import Avg
@@ -12,7 +11,6 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
 from rest_framework_simplejwt.tokens import RefreshToken
-from reviews.models import Category, Genre, Review, Title, User
 
 from .mixins import CreateListDestroyViewSet
 from .permissions import (IsAdminModeratorAuthorPermission, IsAdminOnly,
@@ -22,6 +20,8 @@ from .serializers import (CategorySerializer, CommentSerializer,
                           NotAdminSerializer, ReviewSerializer,
                           SignUpSerializer, TitleReadSerializer,
                           TitleWriteSerializer, UsersSerializer)
+from api.filters import TitleFilter
+from reviews.models import Category, Genre, Review, Title, User
 
 
 class UsersViewSet(viewsets.ModelViewSet):
@@ -74,22 +74,16 @@ class APIGetToken(APIView):
         username = serializer.validated_data.get('username')
         confirmation_code = serializer.validated_data.get('confirmation_code')
 
-        try:
-            user = User.objects.get(username=username)
-        except User.DoesNotExist:
+        user = get_object_or_404(User, username=username)
+
+        if not default_token_generator.check_token(user, confirmation_code):
             return Response(
-                {'username': 'Пользователь не найден'},
-                status=status.HTTP_404_NOT_FOUND
+                {'confirmation_code': 'Неверный код подтверждения!'},
+                status=status.HTTP_400_BAD_REQUEST
             )
 
-        if default_token_generator.check_token(user, confirmation_code):
-            token = str(RefreshToken.for_user(user).access_token)
-            return Response({'token': token}, status=status.HTTP_200_OK)
-
-        return Response(
-            {'confirmation_code': 'Неверный код подтверждения!'},
-            status=status.HTTP_400_BAD_REQUEST
-        )
+        token = str(RefreshToken.for_user(user).access_token)
+        return Response({'token': token}, status=status.HTTP_200_OK)
 
 
 class APISignup(APIView):
@@ -104,9 +98,6 @@ class APISignup(APIView):
         )
         email.send()
 
-    def generate_confirmation_code(self, user):
-        return default_token_generator.make_token(user)
-
     def post(self, request):
         serializer = SignUpSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -119,7 +110,7 @@ class APISignup(APIView):
             email=email
         )
 
-        confirmation_code = self.generate_confirmation_code(user)
+        confirmation_code = default_token_generator.make_token(user)
 
         email_body = (
             f'Доброе время суток, {user.username}.\n'

@@ -2,9 +2,10 @@ from django.core.exceptions import ValidationError
 from django.shortcuts import get_object_or_404
 from django.contrib.auth.validators import UnicodeUsernameValidator
 from rest_framework import serializers
+
 from reviews.models import Category, Comment, Genre, Review, Title, User
 from reviews.validators import validate_username
-from reviews.constants import max_length_username, max_length_email
+from reviews.constants import MAX_LENGTH_USERNAME, MAX_LENGTH_EMAIL
 
 
 class UsersSerializer(serializers.ModelSerializer):
@@ -26,7 +27,7 @@ class NotAdminSerializer(serializers.ModelSerializer):
 
 class GetTokenSerializer(serializers.Serializer):
     username = serializers.CharField(
-        max_length=max_length_username,
+        max_length=MAX_LENGTH_USERNAME,
         required=True,
         validators=[
             validate_username,
@@ -37,18 +38,11 @@ class GetTokenSerializer(serializers.Serializer):
         required=True
     )
 
-    class Meta:
-        model = User
-        fields = (
-            'username',
-            'confirmation_code'
-        )
-
 
 class SignUpSerializer(serializers.Serializer):
-    email = serializers.EmailField(max_length=max_length_email, required=True)
+    email = serializers.EmailField(max_length=MAX_LENGTH_EMAIL, required=True)
     username = serializers.CharField(
-        max_length=max_length_username,
+        max_length=MAX_LENGTH_USERNAME,
         required=True,
         validators=[
             validate_username,
@@ -116,7 +110,8 @@ class TitleWriteSerializer(serializers.ModelSerializer):
     genre = serializers.SlugRelatedField(
         queryset=Genre.objects.all(),
         slug_field='slug',
-        many=True
+        many=True,
+        allow_empty=False
     )
 
     class Meta:

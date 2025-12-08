@@ -1,7 +1,6 @@
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.utils import timezone
-
-FORBIDDEN_USERNAME = ('me',)
 
 
 def validate_username(value):
@@ -10,11 +9,15 @@ def validate_username(value):
         Не являет ли имя пользователя - me
         и проверяет на неподходящие символы
     """
-    if value.lower() in FORBIDDEN_USERNAME:
+    if value.lower() in settings.FORBIDDEN_USERNAMES:
         raise ValidationError('Неподходящее имя пользователя')
 
 
 def validate_year(value):
+    """
+    Валидатор для проверки года выпуска произведения.
+    Проверяет, что год не превышает текущий год.
+    """
     now = timezone.now().year
     if value > now:
         raise ValidationError(

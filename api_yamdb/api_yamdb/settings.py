@@ -117,3 +117,5 @@ EMAIL_FILE_PATH = BASE_DIR / 'sent_emails'
 
 
 AUTH_USER_MODEL = 'reviews.User'
+
+FORBIDDEN_USERNAMES = ('me',)
