@@ -10,7 +10,6 @@ from .constants import (
     MAX_LENGTH_LAST_NAME,
     MAX_LENGTH_NAME_CATEGORY, MAX_LENGTH_NAME_GENRE,
     MAX_LENGTH_NAME_TITLE,
-    MAX_LENGTH_TEXT_REVIEW, MAX_LENGTH_TEXT_COMMENT,
     MIN_SCORE, MAX_SCORE
 )
 
@@ -159,7 +158,6 @@ class Review(models.Model):
     )
     text = models.CharField(
         'текст отзыва',
-        max_length=MAX_LENGTH_TEXT_REVIEW
     )
     author = models.ForeignKey(
         User,
@@ -213,7 +211,6 @@ class Comment(models.Model):
     )
     text = models.CharField(
         'текст комментария',
-        max_length=MAX_LENGTH_TEXT_COMMENT
     )
     author = models.ForeignKey(
         User,

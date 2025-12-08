@@ -10,7 +10,9 @@ def validate_username(value):
         и проверяет на неподходящие символы
     """
     if value.lower() in settings.FORBIDDEN_USERNAMES:
-        raise ValidationError('Неподходящее имя пользователя')
+        raise ValidationError(
+            f'Имя пользователя "{value}" запрещено. Выберите другое имя.'
+        )
 
 
 def validate_year(value):
